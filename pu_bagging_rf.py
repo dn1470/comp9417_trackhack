@@ -116,7 +116,7 @@ rf = BaggingPuClassifier(RandomForestClassifier(random_state=0, max_depth=20),
                          max_samples = 24000
                         )
 
-# Fit training set
+# Fit training set 
 rf.fit(data,y)
 
 # Check the new contents of the set

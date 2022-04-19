@@ -5,3 +5,6 @@ self_train.py - CatBoost with k-fold
 regression.py - Regression model
 randomforest.py - RandomForest model with different parameters
 pu_bagging_rf.py - PU Bagging with Random Forest/Parameter Tuning
+KNNClassifier.py - KNN model
+perceptron.py - perceptron model
+feature_extraction.py - Merging long tables to main dataset
