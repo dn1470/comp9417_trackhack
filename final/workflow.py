@@ -14,6 +14,10 @@ from adaboost import adaboost
 from histgradientboost import histgradientboost
 from ensemblemethod import ensemblemethod
 
+'''
+Main workflow - trigger the entire ensemble model from here
+'''
+
 def extract_features():
     feature_extraction = feature_extraction()
     feature_extraction = feature_extraction()
