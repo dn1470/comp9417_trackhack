@@ -11,7 +11,7 @@
 
 ---
 ### Final files
-Please find the final files located in the `/final` directory.
+Please find the code used for the final model in the `/final` directory.
 |File Name|Description|
 |-|-|
 |adaboost.py|Final tuned model using AdaBoost|
