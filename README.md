@@ -10,7 +10,26 @@
 |Kaman Chan|z5257026|
 
 ---
+### Final files
+Please find the final files located in the `/final` directory.
+|File Name|Description|
+|-|-|
+|adaboost.py|Final tuned model using AdaBoost|
+|catboostclassifier.py|Final tuned model using CatBoost|
+|decisiontree.py|Final tuned decision tree model|
+|ensemblemethod.py|Custom ensemble method which combines the predictions of multiple models|
+|feature_extraction.py|Condenses long form tables and merges all data together with the main dataset|
+|feature_selection.py|Feature selector - drops the unimportant features|
+|histgradientboost.py|Final tuned HistGradientBoostingClassifier|
+|randomforest.py|Final random forest model|
+|self_train.py|K-fold self-training method used on the training dataset|
+|utils.py|Utility functions|
+|workflow.py|Main workflow - trigger the entire ensemble model from here|
+|xgboost.py|Final tuned model using XGBoostClassifier|
 
+---
+
+### Other working files
 |File Name| Description|
 |-|-|
 |hyperparameter_tuning.py| Custom grid search function for hyperparameter tuning|
