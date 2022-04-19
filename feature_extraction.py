@@ -12,6 +12,9 @@ class feature_extraction:
         dates = pd.to_datetime(col, format='%Y-%M-%d')
         return (dates - pd.Timestamp("1970-01-01")) // pd.Timedelta("1s")
     
+    '''
+    Helper function - fills the missing values in the given dataframe using the distribution of the filled values
+    '''
     def fill_with_distribution(self, df):
         distribution = df.value_counts(normalize=True)
         replacement_lambda = lambda x: np.random.choice(distribution.index, p=distribution.values) if pd.isnull(x) else x
@@ -26,9 +29,10 @@ class feature_extraction:
         # Dataset - [ebb_set1, ebb_set2, eval_set]
         return pd.read_csv("../data/" + data_name + "_" + dataset + ".csv")
 
-    # feature = activations
-    # group by customer id - select the row with the latest activation date
-    # might need to split the activation_date up into multiple columns - year, month, day
+    '''
+    Activation feature
+    Groups by customer id and selects the row with the latest activation date
+    '''
     def activations(self, dataset):
         data = self.__get_data("activations", dataset)
 
@@ -39,8 +43,12 @@ class feature_extraction:
         merged_df.columns = ["customer_id", "latest_activation_date", "latest_activation_channel", "activation_count"]
 
         return merged_df.set_index('customer_id')
-    # Returns 0 for no enrolments detected, 1 for no de-enrolements detected, 
-    # or 1/0 depending on whether latest enrolment is before deenrolment
+    
+    '''
+    Helper function for auto_refill
+    Returns 0 for no enrolments detected, 1 for no de-enrolements detected, 
+    or 1/0 depending on whether latest enrolment is before de-enrolment
+    '''
     def __is_enrolled(self, r):
         if pd.isna(r.auto_refill_enroll_date):
             return 0
@@ -50,18 +58,24 @@ class feature_extraction:
             enroll_date = datetime.strptime(r.auto_refill_enroll_date, "%Y-%m-%d")
             de_enroll_date = datetime.strptime(r.auto_refill_de_enroll_date, "%Y-%m-%d")
             return 1 if enroll_date.date() > de_enroll_date.date() else 0
-        
-    # feature = auto_refill
-    # group by customer id - select the row with the latest auto_refill_enroll_date
-    # a lot of missing data in this feature
-    # convert to a binary
-    # check which date is the latest
+    
+    '''
+    Auto_refill feature
+    Group by customer id
+    Check if the auto_refill_enrol or auto_refill_deenroll dates are filled
+    Return a check of if the customer is currently enrolled
+    '''
     def auto_refill(self, dataset):
         data = self.__get_data("auto_refill", dataset)
         data = data.sort_values("auto_refill_enroll_date").groupby("customer_id").tail(1)
         data["is_auto_refill_enrolled"] = data.apply(lambda r: self.__is_enrolled(r), axis=1)
         return data.drop(["auto_refill_enroll_date", "auto_refill_de_enroll_date"], axis=1).set_index('customer_id')
     
+    '''
+    Deactivations feature
+    Group by customer id
+    Aggregate the rows using sum
+    '''
     def deactivations(self, dataset): 
         data = self.__get_data("deactivations", dataset)
 
@@ -74,17 +88,21 @@ class feature_extraction:
         merged_df = pd.merge(total_count, pastdue_count, on=["customer_id"])
         return merged_df
     
-    # interactions
-    # count how many interactions
+    '''
+    Interactions feature
+    Count how many interactions have occurred for each customer
+    '''
     def interactions(self, dataset):
         data = self.__get_data("interactions", dataset)
         data = data.groupby("customer_id").size().to_frame()
         data.columns = ["interactions_count"]
         return data
         
-    # ivr calls
-    # count completed and non-completed
-    # missing values - assume they are 0
+    '''
+    IVR calls feature
+    Count the number of completed and not completed calls
+    Missing values assumed to be not completed
+    '''
     def ivr_calls(self, dataset):
         data = self.__get_data("ivr_calls", dataset)
         completed_count = data[data.iscompleted == 1].groupby("customer_id").size().to_frame()
@@ -94,7 +112,10 @@ class feature_extraction:
         merged_df.columns = ["ivr_completed_count", "ivr_notcompleted_count"]
         return merged_df
     
-    # only the quantity (loyalty points)
+    '''
+    Loyalty program feature
+    Aggregate by summing up the loyalty points
+    ''''
     def loyalty(self, dataset):
         data = self.__get_data("loyalty_program", dataset)
 
@@ -104,7 +125,10 @@ class feature_extraction:
         
         return data
 
-    # if it has a data point then 1 else 0
+    '''
+    Lease History feature
+    Checks if the customer has ever had a lease
+    '''
     def lease_history(self, dataset):
         data = self.__get_data("lease_history", dataset)
         data["has_leased"] = data.apply(lambda r: 0 if pd.isna(r.lease_status) else 1, axis=1)
@@ -112,7 +136,10 @@ class feature_extraction:
         data = data.groupby("customer_id").max()
         return data
 
-    # for network, aggregate everything for each customer and take the mean
+    '''
+    Network feature
+    Aggregate by summing up the rows then taking the mean
+    '''
     def network(self, dataset):
         network_df = self.__get_data("network", dataset)
         network_count = network_df.groupby("customer_id").size().reset_index(name="network_count")
@@ -122,20 +149,24 @@ class feature_extraction:
         network_mean = pd.merge(network_count, network_mean, on=["customer_id"])
         return network_mean.set_index("customer_id")
     
-    # for notifying, group by count
+    '''
+    Notifying feature
+    Aggregate by counting the number of notifications for each customer
+    '''
     def notifying(self, dataset):
         notifying_df = self.__get_data("notifying", dataset)
-        # notifying_df = pd.read_csv('../data/notifying_ebb_set{}.csv'.format(dataset_number))
 
         notifying_count = notifying_df.groupby("customer_id").count()
         notifying_count.columns = ["notifying_count"]
         return notifying_count
     
-    # for phone_data - take the latest row for each customer
-    # keep bluetooth, language, memory_total, storage_total, storage_total-available
+    '''
+    Phone data feature
+    Take the latest row for each customer
+    Keep bluetooth, language, memory_total, storage_total, storage_total-available
+    '''
     def phone_data(self, dataset):
         data_df = self.__get_data("phone_data", dataset)
-        # pd.read_csv("../data/phone_data_ebb_set{}.csv".format(dataset_number))
 
         latest_phone = data_df.sort_values("timestamp").groupby("customer_id").tail(1)
         latest_phone_selected_vals = latest_phone[["customer_id", "bluetooth_on", "language", "memory_total", "storage_total", "storage_available"]]
@@ -144,15 +175,21 @@ class feature_extraction:
         
         return latest_phone_selected_vals.set_index("customer_id")
 
-    # reactivation: just count
+    '''
+    Reactivations feature
+    Count the number of reactivations for each customer
+    '''
     def reactivations(self, dataset):
         data_df = self.__get_data("reactivations", dataset)
-        # pd.read_csv("../data/reactivations_ebb_set{}.csv".format(dataset_number))
+
         reactivation_count = data_df.groupby("customer_id").size().to_frame()
         reactivation_count.columns = ["reactivation_count"]
         return reactivation_count
     
-    # redemptions: count the number of redemptions, and sum up the revenues for each customer
+    '''
+    Redemptions feature
+    Count the number of redemptions, and sum up the revenues for each customer
+    '''
     def redemptions(self, dataset):
         redemption_df = self.__get_data("redemptions", dataset)
         redemption_count = redemption_df.groupby("customer_id").size().to_frame()
@@ -161,7 +198,10 @@ class feature_extraction:
         merged.columns = ["redemption_count", "redemption_revenues_total"]
         return merged
     
-    # suspension: number of suspentions for each customer
+    '''
+    Suspensions feature
+    Number of suspentions for each customer
+    '''
     def suspensions(self, dataset):
         suspensions_df = self.__get_data("suspensions", dataset)
         
@@ -169,7 +209,10 @@ class feature_extraction:
         suspensions_count.columns = ["suspensions_count"]
         return suspensions_count
 
-    # throttling: count of dates for each customer
+    '''
+    Throttling feature
+    Count of dates for each customer
+    '''
     def throttling(self, dataset):
         throttling_df = self.__get_data("throttling", dataset)
 
@@ -177,6 +220,11 @@ class feature_extraction:
         throttling_count.columns = ["throttling_count"]
         return throttling_count
     
+    '''
+    State feature
+    Fill missing values using distribution filler
+    Label encode all values
+    '''
     def state(self, state_df):
         # Replace missing values with the distribution from the filled values
         state_df = self.fill_with_distribution(state_df)
@@ -187,6 +235,11 @@ class feature_extraction:
         
         return state_df
     
+    '''
+    Latest Activation Chanel feature
+    Fill missing values using distribution filler
+    Label encode all values
+    '''
     def latest_activation_channel(self, df):
         df = self.fill_with_distribution(df)
         
@@ -208,8 +261,6 @@ class feature_extraction:
         zero_value_approach = lambda x: x if not np.isnan(x) else 0
 #     replaces with a binary value (1 if true, 0 if false
         binary_replacement_approach = lambda x, default: int(x == default)
-#     TODO: Make mean value approach
-#     TODO: String replacement approach
         main_data = self.__get_base_data(dataset)
     
         # Ebb set features
