@@ -3,6 +3,9 @@ import numpy as np
 from catboost import CatBoostClassifier
 
 def self_train(all_training_data):
+    '''
+    K-fold self-training method used on the training dataset
+    '''
     all_training_data = all_training_data.drop(columns=['language'])
 
     labeled_samples = all_training_data.loc[all_training_data['ebb_eligible'] == 1]
