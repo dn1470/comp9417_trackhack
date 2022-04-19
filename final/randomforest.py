@@ -2,6 +2,9 @@ from sklearn import ensemble
 from utils import predict
 
 def randomforest(X_train, y_train):
+    '''
+    Final random forest model
+    '''
     rf_clf = ensemble.RandomForestClassifier(random_state=0)
     rf_clf = rf_clf.fit(X_train, y_train)
 
