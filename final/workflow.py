@@ -19,6 +19,7 @@ Main workflow - trigger the entire ensemble model from here
 '''
 
 def extract_features():
+    # Call feature extraction for each of the datasets
     feature_extraction = feature_extraction()
     feature_extraction = feature_extraction()
     ebb_set1 = feature_extraction.merge_dataset("ebb_set1")
@@ -28,12 +29,14 @@ def extract_features():
     eval_set = eval_set.drop(columns= ['language'])
 
     all_training_data = pd.concat([ebb_set1, ebb_set2])
+    # Initial fill of ebb_eligible
     all_training_data = all_training_data.fillna(0)
 
     return all_training_data, eval_set
 
 
 if __name__ == "__main__":
+    # Data pre-processing
     all_training_data, eval_set = extract_features()
     train_df_final = self_train(all_training_data)
     train_df_final, eval_set = feature_selection(train_df_final, eval_set)
@@ -47,6 +50,7 @@ if __name__ == "__main__":
     adb_pred, adb_score = adaboost(X_train, y_train)
     hgb_pred, hgb_score = histgradientboost(X_train, y_train)
 
+    # Combine individual models into a custom ensemble
     ensemblemethod(dt_pred, rf_pred, xgb_pred, cb_pred, adb_pred, hgb_pred)
 
 
