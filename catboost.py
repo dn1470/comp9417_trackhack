@@ -1,7 +1,6 @@
 import pandas as pd
 from catboost import CatBoostClassifier
 import matplotlib.pyplot as plt
-%matplotlib inline
 
 # Creating training set & test set
 ebb1_df = pd.read_csv("extracted_features/extracted_features-ebb_set1-all.csv")
@@ -12,15 +11,15 @@ all_df = pd.concat([ebb1_df, ebb2_df])
 # Treat unlabelled data as negatives
 all_df = all_df.fillna(0)
 
-columns_to_drop = ['language']
+columns_to_drop = ["language"]
 
 all_df = all_df.drop(columns=columns_to_drop)
 
-X = all_df.drop(columns=['ebb_eligible', 'customer_id'])
-y = all_df['ebb_eligible'].values
+X = all_df.drop(columns=["ebb_eligible", "customer_id"])
+y = all_df["ebb_eligible"].values
 
 # Fit the training set
-clf = CatBoostClassifier(logging_level='Silent')
+clf = CatBoostClassifier(logging_level="Silent")
 clf.fit(X, y)
 
 # To plot feature importances
